@@ -1,0 +1,97 @@
+import React, { useEffect, useState, useRef } from "react";
+import { NavLink, useLoaderData, useNavigate, useRouteLoaderData } from "react-router-dom";
+import { useGlobalContext } from "../context/AppContext";
+import { VscThreeBars } from "react-icons/vsc";
+import { RxCross2 } from "react-icons/rx";
+import axios from "axios";
+
+const api = process.env.REACT_APP_API_URL;
+const Navbar = () => {
+
+  const [toggle, setToggle] = useState(true);
+
+  const upbarRef = useRef();
+  const {userName, setUserName} = useGlobalContext();
+
+
+  const isUserLogin = localStorage.getItem("user");
+  const [user, setUser] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate()
+
+
+
+  const logoutHandler = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const response = await fetch("http://localhost:5000/logout", {
+        credentials: "include",
+      });
+      localStorage.clear("user");
+      setUserName("");
+      if (!response.ok) {
+        throw new Error("error while logout");
+      }
+      const result = await response.json();
+
+      if (result) {
+        navigate("/signup");
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openSidbearHandler = (e) => {
+    e.preventDefault();
+    setToggle(!toggle);
+    
+  }
+
+
+  return (
+  <section className="relative">
+     {toggle ?  <RxCross2 size={30} className="z-[9999] mt-4 md:hidden" onClick={openSidbearHandler}/>: <VscThreeBars size={30} className="z-[99999] mt-4 md:hidden" onClick={openSidbearHandler} />}
+    <nav className={`flex fixed top-0 item-center  justify-start gap-10 list-none md:gap-4 md:flex-row   ${toggle ? `translate-y-0 duration-500 transition-all ease-linear` : `-translate-y-52 duration-500 transition-all ease-linear`}`} >
+      {loading && (
+        <div className="flex item-center justify-center fixed top-0 left-0 bg-[#2d2828] bg-opacity-30 w-full h-full">
+          <article className="flex item-center justify-center m-auto">
+            <span className="w-[48px] h-[48px] border-[5px] border-solid border-white border-b-[#FF3D00] rounded-[50%] inline-block animate-spin"></span>
+          </article>
+        </div>
+      )}
+      <ul className={`fixed top-0 bg-[#3c4043]  w-full h-auto flex items-start justify-start flex-col md:flex-row gap-4 md:gap-20`}>
+      <li className="mb-2 pl-10 md:mb-0">
+        <NavLink className="text-white" to="/">Products</NavLink>
+      </li>
+      <li className="mb-2 pl-10 md:mb-0">
+        <NavLink className="text-white" to="/add_product">Add Products</NavLink>
+      </li>
+      {!isUserLogin && (
+        <li className="mb-2 pl-10 md:mb-0">
+          <NavLink className="text-white" to="/signup">Signup</NavLink>
+        </li>
+      )}
+      {isUserLogin && (
+        <li className="mb-2 pl-10 md:mb-0">
+          <NavLink className="text-white" onClick={logoutHandler}>Logout</NavLink>
+        </li>
+      )}
+      </ul>
+      {isUserLogin && (
+        <li className="absolute right-10 top-4 text-white  md:text-[18px] flex md:top-auto">
+         Welcome😎  {userName}
+        </li>
+      )}
+    </nav>
+  </section>
+  );
+};
+
+export default Navbar;
+
